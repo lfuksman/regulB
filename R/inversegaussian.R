@@ -28,8 +28,7 @@ inversegaussian <- function(mean, shape){
   for (i in 1:p){
     if (z[i] <= mean[i]/(mean[i]+x[i])) {
       rinv[i] <- x[i]
-    }
-    else{
+    } else{
       rinv[i] <- mean[i]^2/x[i]
     }
   }

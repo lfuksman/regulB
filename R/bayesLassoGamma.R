@@ -86,3 +86,4 @@ bayesLassoGamma <- function(x,y,Total=10000, B=5000){
   }
   return(beta_store)
 }
+
