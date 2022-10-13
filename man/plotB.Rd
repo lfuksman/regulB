@@ -2,36 +2,54 @@
 % Please edit documentation in R/plotB.R
 \name{plotB}
 \alias{plotB}
-\title{plotB}
+\title{Function to plot a graphical summary of regularized beta coefficients in linear regression}
 \usage{
 plotB(
   x,
   y,
   Total = 10000,
   B = 5000,
+  thin = 1,
   title = "Plot",
   color = "red",
   includeCI = TRUE,
   includeMAP = TRUE,
-  includeLSE = TRUE
+  includeLSE = TRUE,
+  method = c("bayesLassoGamma", "bayesHorseshoe")
 )
 }
 \arguments{
-\item{x}{Matrix of predictors, size n by p}
+\item{x}{Matrix of predictors, size n by p. Should be centered and scaled before calling the function.}
 
-\item{y}{Matrix of response, size p by 1}
+\item{y}{Matrix of response, size p by 1. Should be centered before calling the function.}
 
 \item{Total}{Total number of iterations for Gibbs sampler}
 
 \item{B}{Burn-in iterations for Gibbs sampler}
+
+\item{thin}{Thinning parameter, only used if bayesHorseshoe function is specified as an argument}
+
+\item{title}{Title of the produced plot}
+
+\item{color}{Color with which maximum-a-posteriori estimates are labeled on the plot}
+
+\item{includeCI}{Can be TRUE or FALSE, indicates whether to plot 95 percent confidence intervals}
+
+\item{includeMAP}{Can be TRUE or FALSE, indicates whether to plot maximum-a-posteriori estimates}
+
+\item{includeLSE}{Can be TRUE or FALSE, indicates whether to plot least squares estimates}
+
+\item{method}{Can be either bayesLassoGamma or bayesHorseshoe, depending on which regularization method is desired.
+bayesGammaLasso performs bayesian lasso selection method with gamma hyperprior on \eqn{\lambda^2} as described
+in Park and Casella (2008). bayesHorseshoe performs horseshoe regularization method as described in Makalic and Schmidt (2016).}
 }
 \value{
 
 }
 \description{
-Generates plots of least squares estimate, maximum-a-posteriori estimate and 95 percent confidence intervals
+Function generates plots of least squares estimate, maximum-a-posteriori estimate and 95 percent confidence intervals
 of beta coefficients for each predictor. Maximum-a-posteriori estimate and 95 percent confidence intervals are generated using
-the output from bayesLassoGamma function.
+the output from either bayesLassoGamma or bayesHorseshoe function.
 }
 \examples{
 x <- matrix(0, nrow=60, ncol=7)
@@ -48,8 +66,11 @@ for (i in 1:60){
 y <- y - mean(y) # centered y
 plotB(x,y,color="blue",title="Lasso with Gamma hyperprior",includeMAP=FALSE,includeCI=TRUE,includeLSE =FALSE) #CI
 plot(x,y,color="red",title="Lasso with Gamma hyperprior",includeMAP=TRUE,includeCI=TRUE,includeLSE =TRUE) #CI,MAP,LSE
-
 }
 \references{
+Park T, & Casella G. (2008). The Bayesian Lasso. Journal of the American Statistical Association,
+103:482, 681-686, DOI: 10.1198/016214508000000337
 
+E. Makalic and D. F. Schmidt. (2016) A Simple Sampler for the Horseshoe Estimator.
+IEEE Signal Processing Letters, 23(1), 179-182. Jan. 2016, doi: 10.1109/LSP.2015.2503725
 }

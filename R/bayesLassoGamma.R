@@ -1,16 +1,36 @@
-#' @title bayesLassoGamma
+#' @title Function to perform Bayesian lasso in linear regression
 #'
 #' @description
+#' Consider the model \eqn{y = x\beta+\epsilon} where \eqn{y = (y_1,...,y_n)} are \eqn{n} responses
+#' and \eqn{\epsilon \sim N(0,\sigma^2)}.
+#' The function is based on Park and Casella (2008) and computes \eqn{\beta} estimates from posterior distribution.
+#' Gibbs sampler generates \eqn{\beta} from multivariate normal distribution,
+#' \eqn{\sigma^2} from inverse gamma, \eqn{\tau_i^{-2}} from inverse gaussian and
+#' \eqn{\lambda^2} from gamma distribution. The algorithm for sampling from inverse gaussian
+#' distribution is based on Michael, Schucany and Haas (1976).
 #'
-#' @param x Matrix of predictors, size n by p
+#' @param x Matrix of predictors, size n by p. Should be centered and scaled before calling the function.
 #'
-#' @param y Matrix of response, size p by 1
+#' @param y Matrix of response, size p by 1. Should be centered before calling the function.
 #'
-#' @param Total Total number of iterations for Gibbs sampler
+#' @param T Total number of iterations for Gibbs sampler
 #'
-#' @param B Burn-in iterations for Gibbs sampler
+#' @param B Burn-in iterations for Gibbs sampler.Here burn-in ietrations are not counted as part of Total iterations.
 #'
-#' @return Returns a matrix of beta coefficients from Gibbs sampler runs, size Total by p
+#' @return Returns a matrix of beta coefficients after discarding burn-in iterations,
+#' size Total*p.
+#'
+#' @details Gibbs sampler is based on the following full conditional distributions:
+#'
+#' \eqn{\beta|. \sim MN(A^{-1}X'y,\sigma^2 * A^{-1}) } where
+#' \eqn{ A=X'X+{D}_\tau^{-1} }
+#'
+#' \eqn{ \sigma^2|. \sim IG( (1/2) * (n-1+p), (1/2) * [(y-X\beta)'(y-X\beta) + \beta'{D}_\tau^{-1}\beta] ) }
+#'
+#' \eqn{ \tau_i^{-2}|. \sim Inverse-Gaussian (sqrt(\lambda^2 * \sigma^2 / \beta_i^2), \lambda^2) }
+#'
+#' \eqn{\lambda^2|. \sim Gamma(p+r, \delta+\sum_{i=1}^{p}[ (\tau_i^2)/2) ] ) }
+#'
 #' @examples
 #' x <- matrix(0, nrow=60, ncol=7)
 #' e <- numeric(60)
@@ -27,10 +47,15 @@
 #' bayesLassoGamma(x,y) # we expect only fourth and fifth coefficient to be far from zero
 
 #' @export bayesLassoGamma
-#' @importFrom
 #' @references
+#' Park T, & Casella G. (2008). The Bayesian Lasso. Journal of the American Statistical Association,
+#' 103:482, 681-686, DOI: 10.1198/016214508000000337
+#'
+#' Michael, John R.; Schucany, William R.; Haas, Roy W. (1976),
+#' "Generating Random Variates Using Transformations with Multiple Roots",
+#' The American Statistician, 30 (2): 88–90, doi:10.1080/00031305.1976.10479147, JSTOR 2683801
 
-bayesLassoGamma <- function(x,y,Total=10000, B=5000){
+bayesLassoGamma <- function(x,y,T=10000, B=5000){
   n <- nrow(x)
   p <- ncol(x)
 
@@ -46,11 +71,11 @@ bayesLassoGamma <- function(x,y,Total=10000, B=5000){
   theta <- 1.78
 
   # to store results
-  beta_store <- matrix(0, nrow=Total, ncol=p)
-  lambda_store <- numeric(Total)
+  beta_store <- matrix(0, nrow=(T+B), ncol=p)
+  lambda_store <- numeric(T)
 
   # Gibbs sampler
-  for (i in 1:Total){
+  for (i in 1:(T+B)){
     # sample beta
     Dinv <- diag(as.vector(tau_sq_inv))
     Ainv <- solve(xtx + Dinv)
@@ -84,6 +109,7 @@ bayesLassoGamma <- function(x,y,Total=10000, B=5000){
     beta_store[i,] <- as.vector(beta)
     lambda_store[i] <- lambda
   }
-  return(beta_store)
+  return(beta_store[-(1:B),])
 }
+
 

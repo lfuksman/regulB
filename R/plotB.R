@@ -1,16 +1,32 @@
-#' @title plotB
+#' @title Function to plot a graphical summary of regularized beta coefficients in linear regression
 #'
-#' @description Generates plots of least squares estimate, maximum-a-posteriori estimate and 95 percent confidence intervals
+#' @description Function generates plots of least squares estimate, maximum-a-posteriori estimate and 95 percent confidence intervals
 #' of beta coefficients for each predictor. Maximum-a-posteriori estimate and 95 percent confidence intervals are generated using
-#' the output from bayesLassoGamma function.
+#' the output from either bayesLassoGamma or bayesHorseshoe function.
 #'
-#' @param x Matrix of predictors, size n by p
+#' @param x Matrix of predictors, size n by p. Should be centered and scaled before calling the function.
 #'
-#' @param y Matrix of response, size p by 1
+#' @param y Matrix of response, size p by 1. Should be centered before calling the function.
 #'
 #' @param Total Total number of iterations for Gibbs sampler
 #'
 #' @param B Burn-in iterations for Gibbs sampler
+#'
+#' @param thin Thinning parameter, only used if bayesHorseshoe function is specified as an argument
+#'
+#' @param title Title of the produced plot
+#'
+#' @param color Color with which maximum-a-posteriori estimates are labeled on the plot
+#'
+#' @param includeCI Can be TRUE or FALSE, indicates whether to plot 95 percent confidence intervals
+#'
+#' @param includeMAP Can be TRUE or FALSE, indicates whether to plot maximum-a-posteriori estimates
+#'
+#' @param includeLSE Can be TRUE or FALSE, indicates whether to plot least squares estimates
+#'
+#' @param method Can be either bayesLassoGamma or bayesHorseshoe, depending on which regularization method is desired.
+#' bayesGammaLasso performs bayesian lasso selection method with gamma hyperprior on \eqn{\lambda^2} as described
+#' in Park and Casella (2008). bayesHorseshoe performs horseshoe regularization method as described in Makalic and Schmidt (2016).
 #'
 #' @return
 #' @examples
@@ -28,21 +44,30 @@
 #' y <- y - mean(y) # centered y
 #' plotB(x,y,color="blue",title="Lasso with Gamma hyperprior",includeMAP=FALSE,includeCI=TRUE,includeLSE =FALSE) #CI
 #' plot(x,y,color="red",title="Lasso with Gamma hyperprior",includeMAP=TRUE,includeCI=TRUE,includeLSE =TRUE) #CI,MAP,LSE
+#' @references
+#' Park T, & Casella G. (2008). The Bayesian Lasso. Journal of the American Statistical Association,
+#' 103:482, 681-686, DOI: 10.1198/016214508000000337
+#'
+#' E. Makalic and D. F. Schmidt. (2016) A Simple Sampler for the Horseshoe Estimator.
+#' IEEE Signal Processing Letters, 23(1), 179-182. Jan. 2016, doi: 10.1109/LSP.2015.2503725
 #'
 #' @export plotB
-#' @importFrom
-#' @references
 
-plotB <- function(x,y,Total=10000,B=5000, title="Plot", color="red", includeCI=TRUE, includeMAP=TRUE,includeLSE=TRUE){
+plotB <- function(x,y,Total=10000,B=5000, thin=1,title="Plot", color="red", includeCI=TRUE, includeMAP=TRUE,
+                  includeLSE=TRUE, method=c("bayesLassoGamma","bayesHorseshoe")){
   #find LSE
   xtx <- t(x) %*% x
   xy <- t(x) %*% y
   beta <- solve(xtx, xy)
 
   # find MAP
-  b <- bayesLassoGamma(x,y,Total,B)
+  if (method=="bayesLassoGamma"){
+    b <- bayesLassoGamma(x,y,Total,B)
+  }
+  if (method=="bayesHorseshoe"){
+    b <- bayesHorseshoe(x,y,Total,B,thin)
+  }
   p <- ncol(x)
-  b <- b[-(1:B),]
   beta_MAP <- apply(b, 2, MAP)
   # find CI
 

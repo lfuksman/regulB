@@ -2,7 +2,7 @@
 % Please edit documentation in R/inversegaussian.R
 \name{inversegaussian}
 \alias{inversegaussian}
-\title{inversegaussian}
+\title{Function to sample from inverse gaussian distribution}
 \usage{
 inversegaussian(mean, shape)
 }
@@ -12,12 +12,12 @@ inversegaussian(mean, shape)
 \item{shape}{Single parameter}
 }
 \value{
-A random variable from inverse gaussian distribution
+A vector of random variables from inverse gaussian distribution
 }
 \description{
-Intakes a vector of means and a single shape parameters.
-Generates a vector of random variables from inverse gaussian distribution
- from respective mean and same shape parameters.
+Function intakes a vector of means and a single shape parameter.
+It then generates a vector of random variables from inverse gaussian distribution
+from respective mean and same shape parameters.
 }
 \examples{
 inversegaussian(60,30)
