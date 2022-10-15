@@ -1,6 +1,11 @@
 #' @title Function to perform Bayesian horseshoe regularization in linear regression
 #'
-#' @description Implementation of bhs MATLAB function.
+#' @description The function is an R implementation of bhs MATLAB function which is based on Makalic and
+#' Schmidt (2016). Inside the Gibbs sampler, beta is sampled using method described in Rue (2001). The rest
+#' of the parameters follow the hierarchy outlined in Bhattacharya et al. (2016). However, since no simple
+#' sampler from Half-Cauchy distribution, we follow the reparametrization by Makalic and Schmidt (2016)
+#' where hyperparameters are introduced so that the conditional distributions become Inverse Gamma
+#' from which sampling is simple.
 #'
 #' @param x Matrix of predictors, size n by p. Should be centered and scaled before calling the function.
 #'
@@ -12,19 +17,54 @@
 #'
 #' @param thin Thinning parameter
 #'
-#' @return Returns a matrix of beta coefficients after discarding for burn-in iterations, size Total*p.
+#' @details Gibbs sampler draws from the following full conditional distributions:
+#'
+#' \eqn{\beta|. \sim MN(A^{-1}X'y,\sigma^2 * A^{-1}) }
+#'
+#' \eqn{A=X'X+\Lambda_*^{-1}}
+#'
+#' \eqn{\Lambda_* = \tau^2 * \Lambda}
+#'
+#' \eqn{\Lambda = diag(\lambda_1^2, \lambda_2^2, ..., \lambda_p^2)}
+#'
+#' \eqn{ \sigma^2|. \sim IG( (1/2)*(n+p), (1/2)*[(y-X\beta)'(y-X\beta)+\beta'\Lambda_*^{-1}\beta]) }
+#'
+#' \eqn{ \lambda^2_i|. \sim IG(1, (1/v_i) + (\beta_i^2)/(2 * \tau^2 *\sigma^2) ) }
+#'
+#' \eqn{ \tau^2|. \sim IG( (1/2)*(p+1), (1/\xi)+ 1/(2*\sigma^2)*\sum_{i=1}^{p}(\beta_i^2)/(\lambda_i^2) ) }
+#'
+#' \eqn{ v_i|. \sim IG(1,1+(1/\lambda_i^2))}
+#'
+#' \eqn{ \xi|. \sim IG(1,1+(1/\tau^2) )}
+#'
+#' @return Returns a matrix of beta coefficients from posterior distribution
+#' after discarding for burn-in iterations, size Total*p.
 #' @examples
+#' x <- matrix(0, nrow=60, ncol=7)
+#' e <- numeric(60)
+#' sigma <- 2.5
+#' for (i in 1:60){
+#'  x[i,] <- stats::rnorm(7, 0, 1)
+#'  e[i] <- stats::rnorm(1,0,sd=sigma^2)
+#' }
+#' y <- numeric(60)
+#' for (i in 1:60){
+#'  y[i] <- 3*x[i,4]+4*x[i,5]+e[i]
+#' }
+#' y <- y - mean(y) # centered y
+#' bayesHorseshoe(x,y) # we expect only fourth and fifth coefficient to be far from zer
 #' @export bayesHorseshoe
-#' @references E. Makalic and D. F. Schmidt. (2016) A Simple Sampler for the Horseshoe Estimator.
+#' @references
+#' Bhattacharya A., Antik Chakraborty A. & Mallick B. K. (2016). Fast sampling with Gaussian scale mixture priors in high-dimensional regression.
+#' Biometrika, 103(4), 985–991. https://doi.org/10.1093/bi omet/asw042
+#'
+#' E. Makalic and D. F. Schmidt. (2016) A Simple Sampler for the Horseshoe Estimator.
 #' IEEE Signal Processing Letters, 23(1), 179-182. Jan. 2016, doi: 10.1109/LSP.2015.2503725
 #'
 #' Rue, H. (2001). Fast Sampling of Gaussian Markov Random Fields. Journal of the Royal Statistical Society.
 #' Series B (Statistical Methodology), 63(2), 325–338. http://www.jstor.org/stable/2680602
-#'
-#' Bhattacharya A., Antik Chakraborty A. & Mallick B. K. (2016). Fast sampling with Gaussian scale mixture priors in high-dimensional regression.
-#' Biometrika, 103(4), 985–991. https://doi.org/10.1093/bi omet/asw042
 
-bayesHorseshoe <- function (x,y, T=10000, B=5000, thin=11) {
+bayesHorseshoe <- function (x,y, T=10000, B=5000, thin=1) {
   n <- nrow(x)
   p <- ncol(x)
 

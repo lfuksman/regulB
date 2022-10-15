@@ -44,7 +44,7 @@
 #'  y[i] <- 3*x[i,4]+4*x[i,5]+e[i]
 #' }
 #' y <- y - mean(y) # centered y
-#' bayesLassoGamma(x,y) # we expect only fourth and fifth coefficient to be far from zero
+#' bayesLassoGamma(x,y) # we expect only fourth and fifth coefficient to be non-zero
 
 #' @export bayesLassoGamma
 #' @references

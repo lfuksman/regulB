@@ -53,7 +53,7 @@ for (i in 1:60){
  y[i] <- 3*x[i,4]+4*x[i,5]+e[i]
 }
 y <- y - mean(y) # centered y
-bayesLassoGamma(x,y) # we expect only fourth and fifth coefficient to be far from zero
+bayesLassoGamma(x,y) # we expect only fourth and fifth coefficient to be non-zero
 }
 \references{
 Park T, & Casella G. (2008). The Bayesian Lasso. Journal of the American Statistical Association,
